@@ -1,0 +1,17 @@
+# Terraform's downloaded tools (huge, and re-downloadable anytime)
+**/.terraform/*
+
+# State files (can contain secrets)
+*.tfstate
+*.tfstate.*
+
+# Saved plan files (temporary)
+*.tfplan
+tfplan
+
+# Crash logs
+crash.log
+
+# Local files that might hold secrets
+*.auto.tfvars
+.env
