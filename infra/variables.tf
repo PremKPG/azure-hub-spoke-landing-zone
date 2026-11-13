@@ -38,3 +38,14 @@ variable "enable_bastion" {
   type        = bool
   default     = false
 }
+
+variable "deploy_test_vms" {
+  type    = bool
+  default = false
+}
+
+variable "ssh_public_key" {
+  description = "Supplied via TF_VAR_ssh_public_key, never committed"
+  type        = string
+  default     = ""
+}

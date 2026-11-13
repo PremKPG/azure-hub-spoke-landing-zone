@@ -33,3 +33,25 @@ module "hub" {
   enable_bastion       = var.enable_bastion
   tags                 = local.tags
 }
+
+module "spoke" {
+  source   = "../modules/spoke-network"
+  for_each = var.spokes
+
+  name                    = each.key
+  resource_group_name     = azurerm_resource_group.spoke[each.key].name
+  location                = var.location
+  prefix                  = var.prefix
+  address_space           = each.value.address_space
+  workload_subnet         = each.value.workload_subnet
+  pe_subnet               = each.value.pe_subnet
+  hub_vnet_id             = module.hub.vnet_id
+  hub_vnet_name           = module.hub.vnet_name
+  hub_resource_group_name = azurerm_resource_group.hub.name
+  bastion_subnet_prefix   = cidrsubnet(var.hub_address_space[0], 10, 4)
+  enable_firewall         = var.enable_firewall
+  firewall_private_ip     = module.hub.firewall_private_ip
+  deploy_test_vm          = var.deploy_test_vms
+  ssh_public_key          = var.ssh_public_key
+  tags                    = local.tags
+}
