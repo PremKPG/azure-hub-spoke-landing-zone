@@ -21,3 +21,4 @@ spokes = {
 
 enable_firewall = false
 enable_bastion  = false
+deploy_test_vms = false
