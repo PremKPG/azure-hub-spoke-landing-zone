@@ -18,3 +18,6 @@ spokes = {
     pe_subnet       = "10.2.2.0/24"
   }
 }
+
+enable_firewall = false
+enable_bastion  = false
