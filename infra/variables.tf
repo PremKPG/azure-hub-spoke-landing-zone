@@ -21,3 +21,20 @@ variable "spokes" {
     pe_subnet       = string
   }))
 }
+
+variable "hub_address_space" {
+  type    = list(string)
+  default = ["10.0.0.0/16"]
+}
+
+variable "enable_firewall" {
+  description = "Deploy Azure Firewall (main cost driver)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_bastion" {
+  description = "Deploy Azure Bastion"
+  type        = bool
+  default     = false
+}

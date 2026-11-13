@@ -20,3 +20,16 @@ resource "azurerm_resource_group" "spoke" {
   location = var.location
   tags     = local.tags
 }
+
+module "hub" {
+  source = "../modules/hub-network"
+
+  resource_group_name  = azurerm_resource_group.hub.name
+  location             = var.location
+  prefix               = var.prefix
+  address_space        = var.hub_address_space
+  spoke_address_spaces = flatten([for s in var.spokes : s.address_space])
+  enable_firewall      = var.enable_firewall
+  enable_bastion       = var.enable_bastion
+  tags                 = local.tags
+}
