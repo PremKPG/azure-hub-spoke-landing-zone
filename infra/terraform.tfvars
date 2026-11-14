@@ -19,6 +19,7 @@ spokes = {
   }
 }
 
-enable_firewall = false
-enable_bastion  = false
-deploy_test_vms = false
+enable_firewall          = false
+enable_bastion           = false
+deploy_test_vms          = false
+enable_private_endpoints = false
