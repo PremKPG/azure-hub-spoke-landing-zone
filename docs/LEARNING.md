@@ -70,3 +70,17 @@ Notes from building an Azure hub-and-spoke landing zone with Terraform and GitHu
 - Orphaned resource: Bastion finished in Azure after Terraform timed out, so it was never
   recorded in state. Destroy failed on the attached public IP. Fixed by deleting the Bastion
   with az CLI, then re-applying. Alternative: terraform import to adopt it.
+
+  ## Lesson 7: Governance
+- Azure Policy enforces rules at deployment time; Deny blocks, Audit only flags.
+- Built-in policies looked up with data sources by display name (no hard-coded GUIDs).
+- Scope matters: allowed locations and required tags at subscription level;
+  "no NIC public IPs" only on spoke RGs, because the hub needs public IPs.
+- The built-in "Allowed locations" policy ignores resource groups; tested with a VNet instead.
+- Deny only affects new/updated resources. Existing ones are flagged as non-compliant;
+  fixing them needs Modify/DeployIfNotExists + remediation.
+- Compliance view flagged pre-existing resources (Azure auto-created RGs without owner tags).
+- Microsoft Defender for Cloud auto-assigns a security baseline initiative (ASC Default).
+- Custom RBAC role = least privilege: exact action strings, no write/delete.
+- Activity log exported to Log Analytics for a central audit trail.
+- terraform plan -out=tfplan + apply tfplan guarantees you apply exactly what you reviewed.
