@@ -84,3 +84,19 @@ Notes from building an Azure hub-and-spoke landing zone with Terraform and GitHu
 - Custom RBAC role = least privilege: exact action strings, no write/delete.
 - Activity log exported to Log Analytics for a central audit trail.
 - terraform plan -out=tfplan + apply tfplan guarantees you apply exactly what you reviewed.
+
+## Lesson 8: CI/CD with GitHub Actions and OIDC
+- PR → Checkov scan + terraform plan (posted as a PR comment) → merge → manual approval
+  (production environment) → terraform apply in GitHub.
+- OIDC workload identity federation: GitHub presents a signed token, Entra ID checks it against
+  a federated credential (issuer + subject + audience) and issues a short-lived access token.
+  No client secrets to store, leak or rotate.
+- Federated credential subjects are strict. Newer GitHub repos use immutable IDs:
+  repo:Owner@<owner-id>/repo@<repo-id>:pull_request. Debugged AADSTS700213 by reading
+  the presented subject in the error.
+- Two credentials: pull_request (plans) and environment:production (applies).
+- permissions: id-token: write is required for OIDC.
+- concurrency group prevents parallel applies against the same state.
+- Lock file needs linux_amd64 hashes for Linux runners (terraform providers lock).
+- Required status checks: nothing merges to main unless the plan and scan succeed.
+- Rule: plan locally, apply only through the pipeline.

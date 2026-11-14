@@ -4,6 +4,7 @@ prefix   = "lz"
 tags = {
   owner       = "prem"
   environment = "lab"
+  cost_centre = "personal"
 }
 
 spokes = {
