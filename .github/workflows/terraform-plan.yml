@@ -54,7 +54,7 @@ jobs:
       - name: Plan
         run: |
           terraform plan -input=false -no-color -out=tfplan
-          terraform show -no-color tfplan > plan.txt
+          terraform show -no-color tfplan | sed "s/${ARM_SUBSCRIPTION_ID}/<subscription-id>/g" > plan.txt
 
       - name: Comment plan on PR
         uses: actions/github-script@v7
