@@ -49,3 +49,8 @@ variable "ssh_public_key" {
   type        = string
   default     = ""
 }
+
+variable "test_vm_size" {
+  type    = string
+  default = "Standard_D2s_v3"
+}

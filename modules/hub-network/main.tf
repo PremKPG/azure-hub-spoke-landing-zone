@@ -1,4 +1,3 @@
-# ---------- Network ----------
 resource "azurerm_virtual_network" "hub" {
   name                = "vnet-${var.prefix}-hub-uks"
   location            = var.location
