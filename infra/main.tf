@@ -71,3 +71,15 @@ module "private_endpoints" {
     { for k, s in module.spoke : k => s.vnet_id }
   )
 }
+
+data "azurerm_subscription" "current" {}
+
+module "governance" {
+  source = "../modules/governance"
+
+  subscription_id            = data.azurerm_subscription.current.id
+  spoke_resource_group_ids   = { for k, rg in azurerm_resource_group.spoke : k => rg.id }
+  allowed_locations          = ["uksouth", "ukwest"]
+  required_tag               = "owner"
+  log_analytics_workspace_id = module.hub.log_analytics_workspace_id
+}

@@ -53,3 +53,20 @@ Notes from building an Azure hub-and-spoke landing zone with Terraform and GitHu
   prod → dev timed out, effective routes show 0.0.0.0/0 → 10.0.0.4.
 - Environment variables (export) only last for one terminal session.
 - Paste long text into the editor, not the terminal (heredoc EOF gotcha).
+
+## Lesson 6: Private endpoints and DNS
+- A private endpoint is a NIC with a private IP in my VNet, connected to a PaaS service.
+- public_network_access_enabled = false closes the public route entirely.
+- Same FQDN, different answer depending on where you ask:
+  laptop → 51.x.x.x (public, blocked); VM in linked VNet → 10.1.2.4 (private).
+- CNAME chain: kv.vault.azure.net → kv.privatelink.vaultcore.azure.net → private A record.
+- private_dns_zone_group creates the A record automatically.
+- DNS zones are centralised in the hub and linked to every VNet.
+- Key Vault has two independent locks: RBAC (identity) and network access (defence in depth).
+- count can switch a whole module on and off.
+- Bastion creation timed out after 30 min ("context deadline exceeded" = Terraform stopped
+  waiting, not necessarily an Azure failure). Never Ctrl+C a running apply.
+- az vm run-command runs scripts inside a VM through the Azure agent, with no SSH or Bastion needed.
+- Orphaned resource: Bastion finished in Azure after Terraform timed out, so it was never
+  recorded in state. Destroy failed on the attached public IP. Fixed by deleting the Bastion
+  with az CLI, then re-applying. Alternative: terraform import to adopt it.
