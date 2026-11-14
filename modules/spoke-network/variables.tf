@@ -31,3 +31,9 @@ variable "ssh_public_key" {
   type    = string
   default = ""
 }
+
+variable "vm_size" {
+  description = "Test VM size; check regional capacity and quota before changing"
+  type        = string
+  default     = "Standard_D2s_v3"
+}

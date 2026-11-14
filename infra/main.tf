@@ -1,5 +1,4 @@
 locals {
-  # Our tags plus two that are always added
   tags = merge(var.tags, {
     project    = "hub-spoke-landing-zone"
     managed_by = "terraform"
@@ -12,7 +11,6 @@ resource "azurerm_resource_group" "hub" {
   tags     = local.tags
 }
 
-# One resource group per spoke: for_each loops over the spokes map
 resource "azurerm_resource_group" "spoke" {
   for_each = var.spokes
 
@@ -54,4 +52,5 @@ module "spoke" {
   deploy_test_vm          = var.deploy_test_vms
   ssh_public_key          = var.ssh_public_key
   tags                    = local.tags
+  vm_size                 = var.test_vm_size
 }
