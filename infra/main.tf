@@ -54,3 +54,20 @@ module "spoke" {
   tags                    = local.tags
   vm_size                 = var.test_vm_size
 }
+
+module "private_endpoints" {
+  source = "../modules/private-endpoints"
+  count  = var.enable_private_endpoints ? 1 : 0
+
+  resource_group_name     = azurerm_resource_group.spoke["prod"].name
+  dns_resource_group_name = azurerm_resource_group.hub.name
+  location                = var.location
+  prefix                  = var.prefix
+  pe_subnet_id            = module.spoke["prod"].pe_subnet_id
+  tags                    = local.tags
+
+  vnet_ids = merge(
+    { hub = module.hub.vnet_id },
+    { for k, s in module.spoke : k => s.vnet_id }
+  )
+}

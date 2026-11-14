@@ -54,3 +54,9 @@ variable "test_vm_size" {
   type    = string
   default = "Standard_D2s_v3"
 }
+
+variable "enable_private_endpoints" {
+  description = "Deploy Key Vault, Storage and their private endpoints"
+  type        = bool
+  default     = false
+}
