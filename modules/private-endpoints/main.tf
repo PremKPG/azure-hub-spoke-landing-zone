@@ -9,6 +9,8 @@ resource "random_string" "suffix" {
 
 # ---------- Key Vault ----------
 resource "azurerm_key_vault" "this" {
+  #checkov:skip=CKV_AZURE_110:Purge protection cannot be disabled once enabled; off so the lab vault can be fully removed. Always on in production
+  #checkov:skip=CKV_AZURE_42:Same as CKV_AZURE_110; soft delete is enabled (7 days)
   name                          = "kv-${var.prefix}-uks-${random_string.suffix.result}"
   location                      = var.location
   resource_group_name           = var.resource_group_name
