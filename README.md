@@ -100,6 +100,7 @@ Manual approval (production environment) ──► terraform apply
 - `main` is protected: changes require a pull request, and both checks must pass before merging.
 - Applies are serialised with a `concurrency` group, and use a saved plan file so the reviewed plan is exactly what gets applied.
 - The subscription ID is masked in plan comments because the repository is public.
+- Checkov is enforced (`soft_fail: false`): 47 checks pass, and the 7 suppressions are documented inline with a justification for each.
 
 ## Cost
 
