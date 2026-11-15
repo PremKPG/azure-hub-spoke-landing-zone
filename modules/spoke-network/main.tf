@@ -1,3 +1,4 @@
+# ---------- Network ----------
 resource "azurerm_virtual_network" "spoke" {
   name                = "vnet-${var.prefix}-${var.name}-uks"
   location            = var.location
@@ -13,14 +14,16 @@ resource "azurerm_subnet" "workload" {
   address_prefixes     = [var.workload_subnet]
 }
 
+# Network policies must be enabled, otherwise NSGs are ignored for private endpoints
 resource "azurerm_subnet" "private_endpoints" {
-  name                 = "snet-private-endpoints"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.spoke.name
-  address_prefixes     = [var.pe_subnet]
+  name                              = "snet-private-endpoints"
+  resource_group_name               = var.resource_group_name
+  virtual_network_name              = azurerm_virtual_network.spoke.name
+  address_prefixes                  = [var.pe_subnet]
+  private_endpoint_network_policies = "Enabled"
 }
 
-
+# ---------- NSG: inbound SSH from Bastion only ----------
 resource "azurerm_network_security_group" "workload" {
   name                = "nsg-${var.prefix}-${var.name}-workload-uks"
   location            = var.location
@@ -57,7 +60,44 @@ resource "azurerm_subnet_network_security_group_association" "workload" {
   network_security_group_id = azurerm_network_security_group.workload.id
 }
 
+# ---------- NSG: private endpoints accept HTTPS from inside the network only ----------
+resource "azurerm_network_security_group" "private_endpoints" {
+  name                = "nsg-${var.prefix}-${var.name}-pe-uks"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
 
+  security_rule {
+    name                       = "allow-https-from-vnet"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "deny-all-inbound"
+    priority                   = 4000
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "private_endpoints" {
+  subnet_id                 = azurerm_subnet.private_endpoints.id
+  network_security_group_id = azurerm_network_security_group.private_endpoints.id
+}
+
+# ---------- Peering (both directions required) ----------
 resource "azurerm_virtual_network_peering" "spoke_to_hub" {
   name                      = "peer-${var.name}-to-hub"
   resource_group_name       = var.resource_group_name
@@ -74,6 +114,8 @@ resource "azurerm_virtual_network_peering" "hub_to_spoke" {
   allow_forwarded_traffic   = true
 }
 
+# ---------- UDR: default route via firewall ----------
+# count uses the boolean toggle, not the IP: the firewall IP isn't known at plan time
 resource "azurerm_route_table" "workload" {
   count                         = var.enable_firewall ? 1 : 0
   name                          = "rt-${var.prefix}-${var.name}-uks"
@@ -96,7 +138,7 @@ resource "azurerm_subnet_route_table_association" "workload" {
   route_table_id = azurerm_route_table.workload[0].id
 }
 
-
+# ---------- Optional test VM (no public IP) ----------
 resource "azurerm_network_interface" "test" {
   count               = var.deploy_test_vm ? 1 : 0
   name                = "nic-${var.prefix}-${var.name}-test-uks"

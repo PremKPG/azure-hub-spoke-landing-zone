@@ -26,7 +26,7 @@ jobs:
         with:
           directory: .
           framework: terraform
-          soft_fail: true  
+          soft_fail: false  # any new, untriaged finding blocks the pull request
 
   plan:
     name: Terraform plan
