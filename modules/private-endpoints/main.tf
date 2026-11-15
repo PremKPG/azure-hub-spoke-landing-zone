@@ -1,5 +1,6 @@
 data "azurerm_client_config" "current" {}
 
+# Key Vault and Storage names must be globally unique
 resource "random_string" "suffix" {
   length  = 5
   upper   = false
@@ -15,7 +16,7 @@ resource "azurerm_key_vault" "this" {
   sku_name                      = "standard"
   rbac_authorization_enabled    = true
   public_network_access_enabled = false
-  purge_protection_enabled      = false
+  purge_protection_enabled      = false # Disabled so the lab can be destroyed; enable in production
   soft_delete_retention_days    = 7
   tags                          = var.tags
 
@@ -27,6 +28,9 @@ resource "azurerm_key_vault" "this" {
 
 # ---------- Storage account ----------
 resource "azurerm_storage_account" "this" {
+  #checkov:skip=CKV_AZURE_206:LRS is sufficient for lab data; production would use ZRS or GRS
+  #checkov:skip=CKV_AZURE_33:Queue service is not used; only the blob endpoint is exposed
+  #checkov:skip=CKV2_AZURE_1:Microsoft-managed keys are acceptable for non-sensitive lab data; CMK for regulated workloads
   name                            = "st${var.prefix}uks${random_string.suffix.result}"
   location                        = var.location
   resource_group_name             = var.resource_group_name
@@ -37,9 +41,18 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = false
   allow_nested_items_to_be_public = false
   tags                            = var.tags
+
+  blob_properties {
+    delete_retention_policy {
+      days = 7
+    }
+    container_delete_retention_policy {
+      days = 7
+    }
+  }
 }
 
-# ---------- Private DNS zones ----------
+# ---------- Private DNS zones (centralised in the hub) ----------
 resource "azurerm_private_dns_zone" "kv" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = var.dns_resource_group_name
@@ -52,6 +65,7 @@ resource "azurerm_private_dns_zone" "blob" {
   tags                = var.tags
 }
 
+# Link each zone to every VNet so all of them resolve private endpoint addresses
 resource "azurerm_private_dns_zone_virtual_network_link" "kv" {
   for_each              = var.vnet_ids
   name                  = "link-kv-${each.key}"
@@ -71,6 +85,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
 }
 
 # ---------- Private endpoints ----------
+# The DNS zone group creates the A record in the private zone automatically
 resource "azurerm_private_endpoint" "kv" {
   name                = "pe-${azurerm_key_vault.this.name}"
   location            = var.location

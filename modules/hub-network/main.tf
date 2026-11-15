@@ -1,3 +1,4 @@
+# ---------- Network ----------
 resource "azurerm_virtual_network" "hub" {
   name                = "vnet-${var.prefix}-hub-uks"
   location            = var.location
@@ -6,6 +7,7 @@ resource "azurerm_virtual_network" "hub" {
   tags                = var.tags
 }
 
+# cidrsubnet(range, newbits, netnum): a /16 plus 10 bits gives /26 subnets
 resource "azurerm_subnet" "firewall" {
   name                 = "AzureFirewallSubnet"
   resource_group_name  = var.resource_group_name
@@ -14,6 +16,7 @@ resource "azurerm_subnet" "firewall" {
 }
 
 resource "azurerm_subnet" "firewall_mgmt" {
+  #checkov:skip=CKV2_AZURE_31:Azure does not support NSGs on AzureFirewallManagementSubnet
   name                 = "AzureFirewallManagementSubnet"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.hub.name
@@ -21,13 +24,14 @@ resource "azurerm_subnet" "firewall_mgmt" {
 }
 
 resource "azurerm_subnet" "bastion" {
+  #checkov:skip=CKV2_AZURE_31:Bastion NSG requires a fixed set of platform rules; omitted in this lab, added in production
   name                 = "AzureBastionSubnet"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.hub.name
   address_prefixes     = [cidrsubnet(var.address_space[0], 10, 4)] # 10.0.1.0/26
 }
 
-
+# ---------- Logging ----------
 resource "azurerm_log_analytics_workspace" "this" {
   name                = "log-${var.prefix}-hub-uks"
   location            = var.location
@@ -37,6 +41,7 @@ resource "azurerm_log_analytics_workspace" "this" {
   tags                = var.tags
 }
 
+# ---------- Azure Firewall ----------
 resource "azurerm_public_ip" "fw" {
   count               = var.enable_firewall ? 1 : 0
   name                = "pip-${var.prefix}-fw-uks"
@@ -66,6 +71,8 @@ resource "azurerm_firewall_policy" "this" {
   tags                = var.tags
 }
 
+# Default is deny. Spokes may only reach Ubuntu updates and the egress test site.
+# No rule allows spoke-to-spoke traffic, so prod and dev are isolated.
 resource "azurerm_firewall_policy_rule_collection_group" "baseline" {
   count              = var.enable_firewall ? 1 : 0
   name               = "rcg-baseline"
@@ -117,6 +124,7 @@ resource "azurerm_firewall" "this" {
   }
 }
 
+# Firewall diagnostics to Log Analytics
 resource "azurerm_monitor_diagnostic_setting" "firewall" {
   count                          = var.enable_firewall ? 1 : 0
   name                           = "diag-to-law"
@@ -129,6 +137,7 @@ resource "azurerm_monitor_diagnostic_setting" "firewall" {
   }
 }
 
+# ---------- Azure Bastion ----------
 resource "azurerm_public_ip" "bastion" {
   count               = var.enable_bastion ? 1 : 0
   name                = "pip-${var.prefix}-bas-uks"
