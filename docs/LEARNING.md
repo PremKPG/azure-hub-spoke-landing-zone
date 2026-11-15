@@ -100,3 +100,5 @@ Notes from building an Azure hub-and-spoke landing zone with Terraform and GitHu
 - Lock file needs linux_amd64 hashes for Linux runners (terraform providers lock).
 - Required status checks: nothing merges to main unless the plan and scan succeed.
 - Rule: plan locally, apply only through the pipeline.
+- Path-filtered workflows + required status checks = PRs that never finish waiting.
+  Fixed by running the plan workflow on every PR.
