@@ -102,3 +102,13 @@ Notes from building an Azure hub-and-spoke landing zone with Terraform and GitHu
 - Rule: plan locally, apply only through the pipeline.
 - Path-filtered workflows + required status checks = PRs that never finish waiting.
   Fixed by running the plan workflow on every PR.
+
+  ## Lesson 9: Security triage
+- Triage every scanner finding: fix, not applicable (false positive), or accepted risk.
+- Suppressions live in code (#checkov:skip=ID:reason) so the reasoning is visible.
+- Fixed: storage soft delete; NSGs on private endpoint subnets
+  (needs private_endpoint_network_policies = "Enabled", otherwise NSGs are ignored for PEs).
+- Not applicable: NSG on AzureFirewallManagementSubnet (unsupported by Azure).
+- Accepted for the lab: LRS, Microsoft-managed keys, Bastion NSG, Key Vault purge protection
+  (can never be disabled once enabled; always on in production).
+- Switched Checkov to soft_fail: false. New findings now block pull requests.
