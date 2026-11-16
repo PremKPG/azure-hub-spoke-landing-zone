@@ -7,36 +7,7 @@ A hub-and-spoke network on Azure, built with modular Terraform and deployed thro
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    gh[GitHub Actions]
-    internet((Internet))
-
-    subgraph hub["Hub VNet · 10.0.0.0/16"]
-        fw["Azure Firewall (Basic)<br/>10.0.0.4"]
-        bas[Azure Bastion]
-        law[Log Analytics]
-        dns["Private DNS zones<br/>vault · blob"]
-    end
-
-    subgraph prod["Prod spoke · 10.1.0.0/16"]
-        vmp["Workload subnet<br/>test VM, no public IP"]
-        pe["Private endpoints<br/>Key Vault + Storage"]
-    end
-
-    subgraph dev["Dev spoke · 10.2.0.0/16"]
-        vmd["Workload subnet<br/>test VM, no public IP"]
-    end
-
-    gh -->|"Terraform via OIDC"| hub
-    hub <-->|VNet peering| prod
-    hub <-->|VNet peering| dev
-    vmp -->|"UDR 0.0.0.0/0"| fw
-    vmd -->|"UDR 0.0.0.0/0"| fw
-    fw -->|"allowed FQDNs only"| internet
-    bas -->|SSH| vmp
-    vmd -.->|"blocked by firewall"| vmp
-```
+![Architecture](docs/architecture.png)
 
 | Network | Address space | Contents |
 |---|---|---|
